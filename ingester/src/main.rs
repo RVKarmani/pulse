@@ -3,6 +3,8 @@ use axum::{
     Json, Router, extract::Query, http::HeaderMap, http::StatusCode, response::IntoResponse,
     routing::get, routing::post,
 };
+use dotenv::dotenv;
+
 use ngrok::config::ForwarderBuilder;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -15,10 +17,13 @@ const STATIC_DOMAIN: &str = "terminally-uncommon-quail.ngrok-free.app";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    dotenv().ok(); // This line loads the environment variables from the ".env" file.
     // Create Axum app
     let app = Router::new()
         .route("/callback", get(callback_get).post(callback_post))
         .route("/setup", post(setup_handler));
+
+    let ngrok_auth_token = std::env::var("NGROK_AUTHTOKEN").expect("NGROK_AUTHTOKEN must be set.");
 
     // Spawn Axum server
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -30,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Set up ngrok tunnel
     let sess1 = ngrok::Session::builder()
-        .authtoken_from_env()
+        .authtoken(ngrok_auth_token)
         .connect()
         .await?;
 
