@@ -942,10 +942,13 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "dotenv",
+ "hyper",
  "ngrok",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
+ "tower-http",
  "url",
 ]
 

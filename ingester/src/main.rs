@@ -11,17 +11,26 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use url::Url;
+use tower_http::cors::{CorsLayer, Any};
 
-// const HUB_URL: &str = "https://pubsubhubbub.appspot.com/subscribe";
+const HUB_URL: &str = "https://pubsubhubbub.appspot.com/subscribe";
 const STATIC_DOMAIN: &str = "terminally-uncommon-quail.ngrok-free.app";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     dotenv().ok(); // This line loads the environment variables from the ".env" file.
+
+    let cors = CorsLayer::new()
+        .allow_origin("http://localhost:5173".parse::<hyper::http::HeaderValue>().unwrap())
+        .allow_methods([hyper::Method::POST])
+        .allow_headers(Any);
+
+
     // Create Axum app
     let app = Router::new()
         .route("/callback", get(callback_get).post(callback_post))
-        .route("/setup", post(setup_handler));
+        .route("/setup", post(setup_handler))
+        .layer(cors);
 
     let ngrok_auth_token = std::env::var("NGROK_AUTHTOKEN").expect("NGROK_AUTHTOKEN must be set.");
 
@@ -88,9 +97,8 @@ async fn callback_post(headers: HeaderMap, body: String) -> impl IntoResponse {
 }
 
 #[derive(Deserialize)]
-struct SetupFeed {
-    topic_url: String,
-    hub_url: String,
+struct SetupYoutubeFeed {
+    channel_handle: String,
     mode: String,
 }
 
@@ -99,21 +107,77 @@ struct ResponseMessage {
     status: String,
     message: String,
 }
-
-async fn setup_handler(Json(payload): Json<SetupFeed>) -> Json<ResponseMessage> {
+async fn setup_handler(Json(payload): Json<SetupYoutubeFeed>) -> Json<ResponseMessage> {
     let client = Client::new();
+
+    let youtube_api_token = std::env::var("GOOGLE_API_KEY")
+        .expect("GOOGLE_API_KEY must be set.");
+
+    // Step 1: Resolve YouTube Channel ID from handle
+    let search_url = format!(
+        "https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q={}&key={}",
+        payload.channel_handle, youtube_api_token
+    );
+
+    let search_response = match client.get(&search_url).send().await {
+        Ok(res) => res,
+        Err(err) => {
+            return Json(ResponseMessage {
+                status: "error".to_string(),
+                message: format!("YouTube API request failed: {}", err),
+            });
+        }
+    };
+
+    let json_result = search_response.json::<serde_json::Value>().await;
+    let channel_id = match json_result {
+        Ok(json) => {
+            println!("{}", serde_json::to_string(&json).unwrap());
+            
+            json["items"]
+            .get(0)
+            .and_then(|item| item["id"]["channelId"].as_str())
+            .map(|s| s.to_string())
+        },
+        Err(err) => {
+            return Json(ResponseMessage {
+                status: "error".to_string(),
+                message: format!("Failed to parse YouTube API response: {}", err),
+            });
+        }
+    };
+
+    let channel_id = match channel_id {
+        Some(id) => id,
+        None => {
+            return Json(ResponseMessage {
+                status: "error".to_string(),
+                message: format!(
+                    "Could not find a channel ID for handle '{}'",
+                    payload.channel_handle
+                ),
+            });
+        }
+    };
+
+    // Step 2: Construct topic URL for PubSubHubbub
+    let topic_url = format!(
+        "https://www.youtube.com/feeds/videos.xml?channel_id={}",
+        channel_id
+    );
 
     let subscribe_request_body = HashMap::from([
         (
-            "hub.callback",
+            "hub.callback".to_string(),
             format!("https://{}/callback", STATIC_DOMAIN),
         ),
-        ("hub.topic", payload.topic_url.to_string()),
-        ("hub.mode", payload.mode.to_string()),
+        ("hub.topic".to_string(), topic_url.clone()),
+        ("hub.mode".to_string(), payload.mode.clone()),
     ]);
 
+    // Step 3: Send subscription request to the hub
     let result = client
-        .post(payload.hub_url)
+        .post(HUB_URL)
         .form(&subscribe_request_body)
         .send()
         .await;
@@ -124,7 +188,7 @@ async fn setup_handler(Json(payload): Json<SetupFeed>) -> Json<ResponseMessage> 
             message: format!(
                 "Sent {} request for {}. Hub responded with {}",
                 payload.mode,
-                payload.topic_url,
+                topic_url,
                 response.status()
             ),
         }),
@@ -134,3 +198,78 @@ async fn setup_handler(Json(payload): Json<SetupFeed>) -> Json<ResponseMessage> 
         }),
     }
 }
+
+
+// async fn setup_handler(Json(payload): Json<SetupYoutubeFeed>) -> Json<ResponseMessage> {
+//     let client = Client::new();
+
+//     let youtube_api_token = std::env::var("GOOGLE_API_KEY").expect("GOOGLE_API_KEY must be set.");
+
+//     // Lookup channel ID using YouTube Data API
+//     let search_url = format!(
+//         "https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q={}&key={}",
+//         payload.channel_handle, youtube_api_token
+//     );
+
+//     let search_response = client
+//         .get(&search_url)
+//         .send()
+//         .await;
+
+//     let channel_id_result = match search_response {
+//         Ok(res) => {
+//             let json = res.json::<serde_json::Value>().await;
+//             match json {
+//                 Ok(val) => val["items"]
+//                     .get(0)
+//                     .and_then(|item| item["id"]["channelId"].as_str())
+//                     .map(|s| s.to_string()),
+//                 Err(_) => None,
+//             }
+//         }
+//         Err(_) => None,
+//     };
+
+//     let channel_id_msg = if let Some(channel_id) = &channel_id_result {
+//         format!("Resolved channel ID: {}", channel_id)
+//     } else {
+//         "Failed to resolve channel ID".to_string()
+//     };
+
+
+
+//     // https://developers.google.com/youtube/v3/guides/push_notifications
+//     let topic_url = format!("https://www.youtube.com/feeds/videos.xml?channel_id={}", channel_id);
+
+
+//     let subscribe_request_body = HashMap::from([
+//         (
+//             "hub.callback",
+//             format!("https://{}/callback", STATIC_DOMAIN),
+//         ),
+//         ("hub.topic", topic_url.to_string()),
+//         ("hub.mode", payload.mode.to_string()),
+//     ]);
+
+//     let result = client
+//         .post(HUB_URL)
+//         .form(&subscribe_request_body)
+//         .send()
+//         .await;
+
+//     match result {
+//         Ok(response) => Json(ResponseMessage {
+//             status: "success".to_string(),
+//             message: format!(
+//                 "Sent {} request for {}. Hub responded with {}",
+//                 payload.mode,
+//                 topic_url,
+//                 response.status()
+//             ),
+//         }),
+//         Err(err) => Json(ResponseMessage {
+//             status: "error".to_string(),
+//             message: format!("Failed to subscribe: {}", err),
+//         }),
+//     }
+// }
