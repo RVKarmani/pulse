@@ -12,25 +12,45 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use url::Url;
 use tower_http::cors::{CorsLayer, Any};
+mod feldera;
+mod stats;
+use tokio::sync::broadcast::Sender;
+use crate::stats::PulseError;
 
 const HUB_URL: &str = "https://pubsubhubbub.appspot.com/subscribe";
 const STATIC_DOMAIN: &str = "terminally-uncommon-quail.ngrok-free.app";
 
+#[derive(Clone)]
+struct AppState {
+    http_client: Client,
+    sentiment_subscription: Sender<Result<String, PulseError>>,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     dotenv().ok(); // This line loads the environment variables from the ".env" file.
+
+    let client = Client::new();
 
     let cors = CorsLayer::new()
         .allow_origin("http://localhost:5173".parse::<hyper::http::HeaderValue>().unwrap())
         .allow_methods([hyper::Method::POST])
         .allow_headers(Any);
 
+    let sentiment_subscription = feldera::subscribe_change_stream(client.clone(), "sentiment_aggr", 4096);
+
+    let state = AppState {
+        http_client: client,
+        sentiment_subscription,
+    };
 
     // Create Axum app
     let app = Router::new()
         .route("/callback", get(callback_get).post(callback_post))
         .route("/setup", post(setup_handler))
-        .layer(cors);
+        .route("/api/stats", get(stats::sentiment_aggrs))
+        .layer(cors)
+        .with_state(state);
 
     let ngrok_auth_token = std::env::var("NGROK_AUTHTOKEN").expect("NGROK_AUTHTOKEN must be set.");
 
