@@ -8,7 +8,6 @@ use log::debug;
 use serde::de::StdError;
 use tokio::sync::broadcast::error::SendError;
 use tokio_util::codec::LinesCodecError;
-// use axum::http::header::CONTENT_TYPE;
 
 use crate::feldera::adhoc_query;
 use crate::AppState;
