@@ -23,7 +23,8 @@ const STATIC_DOMAIN: &str = "terminally-uncommon-quail.ngrok-free.app";
 #[derive(Clone)]
 struct AppState {
     http_client: Client,
-    sentiment_subscription: Sender<Result<String, PulseError>>,
+    graph_node_subscription: Sender<Result<String, PulseError>>,
+    graph_relationships_subscription: Sender<Result<String, PulseError>>,
 }
 
 #[tokio::main]
@@ -37,18 +38,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .allow_methods([hyper::Method::POST])
         .allow_headers(Any);
 
-    let sentiment_subscription = feldera::subscribe_change_stream(client.clone(), "sentiment_aggr", 4096);
+    let graph_node_subscription = feldera::subscribe_change_stream(client.clone(), "graph_nodes", 4096);
+    let graph_relationships_subscription = feldera::subscribe_change_stream(client.clone(), "graph_relationships", 4096);
 
     let state = AppState {
         http_client: client,
-        sentiment_subscription,
+        graph_node_subscription,
+        graph_relationships_subscription
     };
 
     // Create Axum app
     let app = Router::new()
         .route("/callback", get(callback_get).post(callback_post))
         .route("/setup", post(setup_handler))
-        .route("/api/stats", get(stats::sentiment_aggrs))
+        .route("/api/nodes", get(stats::node_updates))
+        .route("/api/relationships", get(stats::relationship_updates))
         .layer(cors)
         .with_state(state);
 

@@ -75,8 +75,8 @@ impl StdError for PulseError {
     }
 }
 
-pub(crate) async fn sentiment_aggrs(State(state): State<AppState>) -> impl IntoResponse {
-    let initial_data = adhoc_query(state.http_client, "SELECT * FROM sentiment_aggr").await;
+pub(crate) async fn node_updates(State(state): State<AppState>) -> impl IntoResponse {
+    let initial_data = adhoc_query(state.http_client, "SELECT * FROM graph_nodes").await;
 
     if let Err(e) = initial_data {
         return Response::builder()
@@ -90,7 +90,44 @@ pub(crate) async fn sentiment_aggrs(State(state): State<AppState>) -> impl IntoR
 
     let initial_stream = futures::stream::once(async move { initial_data });
 
-    let change_stream_rx = state.sentiment_subscription.subscribe();
+    let change_stream_rx = state.graph_node_subscription.subscribe();
+    let change_stream = tokio_stream::wrappers::BroadcastStream::new(change_stream_rx);
+    let stream = initial_stream.chain(change_stream.filter_map(|result| async move {
+        match result {
+            Ok(value) => Some(value),
+            Err(e) => {
+                debug!("BroadcastStream error: {:?}", e);
+                None // Discard errors
+            }
+        }
+    }));
+
+    Response::builder()
+        .status(200)
+        .header("Content-Type", "application/json")
+        .header("Transfer-Encoding", "chunked")
+        .body(Body::from_stream(stream))
+        .unwrap()
+}
+
+
+
+pub(crate) async fn relationship_updates(State(state): State<AppState>) -> impl IntoResponse {
+    let initial_data = adhoc_query(state.http_client, "SELECT * FROM graph_relationships").await;
+
+    if let Err(e) = initial_data {
+        return Response::builder()
+            .status(500)
+            .body(Body::from(format!(
+                "{{\"error\": \"{}\"}}",
+                e.to_string().trim()
+            )))
+            .unwrap();
+    }
+
+    let initial_stream = futures::stream::once(async move { initial_data });
+
+    let change_stream_rx = state.graph_relationships_subscription.subscribe();
     let change_stream = tokio_stream::wrappers::BroadcastStream::new(change_stream_rx);
     let stream = initial_stream.chain(change_stream.filter_map(|result| async move {
         match result {
