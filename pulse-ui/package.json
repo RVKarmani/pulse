@@ -45,6 +45,7 @@
     "shadcn": "2.4.0-canary.10",
     "sonner": "^2.0.3",
     "tailwind-merge": "^2.5.3",
+    "three-spritetext": "^1.9.6",
     "unist-builder": "^4.0.0",
     "unist-util-visit": "^5.0.0"
   },

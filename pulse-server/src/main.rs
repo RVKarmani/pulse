@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
 
     let cors = CorsLayer::new()
-        .allow_origin("http://localhost:5173".parse::<hyper::http::HeaderValue>().unwrap())
+        .allow_origin("http://localhost:3000".parse::<hyper::http::HeaderValue>().unwrap())
         .allow_methods([hyper::Method::POST])
         .allow_headers(Any);
 
@@ -53,13 +53,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .route("/setup", post(setup_handler))
         .route("/api/nodes", get(stats::node_updates))
         .route("/api/relationships", get(stats::relationship_updates))
+        .route("/api/graph", get(stats::node_rel_updates))
         .layer(cors)
         .with_state(state);
 
     let ngrok_auth_token = std::env::var("NGROK_AUTHTOKEN").expect("NGROK_AUTHTOKEN must be set.");
 
     // Spawn Axum server
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
     tokio::spawn(async move {
         axum::serve(tokio::net::TcpListener::bind(addr).await.unwrap(), app)
             .await
