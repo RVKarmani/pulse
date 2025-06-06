@@ -1,0 +1,10 @@
+{
+  "cSpell.words": ["clsx", "rehype", "retroui"],
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ],
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": "file:///Users/arifhossain/Projects/ptm/retro-ui/.github/workflows/deploy.yml"
+  }
+}

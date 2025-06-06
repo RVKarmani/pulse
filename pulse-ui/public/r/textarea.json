@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "textarea",
+  "type": "registry:component",
+  "title": "textarea",
+  "description": "This pretty input makes your users want to type lots of stuff! ⌨️ ⌨",
+  "files": [
+    {
+      "path": "components/retroui/Textarea.tsx",
+      "content": "import React from \"react\";\n\nexport function Textarea({\n  type = \"text\",\n  placeholder = \"Enter text...\",\n  className = \"\",\n  ...props\n}) {\n  return (\n    <textarea\n      placeholder={placeholder}\n      rows={4}\n      className={`px-4 py-2 w-full border-2 border-black shadow-md transition focus:outline-hidden focus:shadow-xs ${className}`}\n      {...props}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/retroui/Textarea.tsx"
+    }
+  ]
+}

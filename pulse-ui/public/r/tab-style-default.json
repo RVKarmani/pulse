@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tab-style-default",
+  "type": "registry:block",
+  "title": "tab-style-default",
+  "registryDependencies": [
+    "https://retroui.dev/r/tab.json"
+  ],
+  "files": [
+    {
+      "path": "preview/components/tab-style-default.tsx",
+      "content": "import { Tab, TabGroup, TabList, TabPanel, TabPanels } from \"@headlessui/react\";\n\nexport default function TabStyleDefault() {\n  return (\n    <TabGroup>\n      <TabList>\n        <Tab className=\"px-4 py-1 border-2 border-transparent data-selected:border-black data-selected:bg-primary data-selected:font-semibold focus:outline-hidden\">\n          Home\n        </Tab>\n        <Tab className=\"px-4 py-1 border-2 border-transparent data-selected:border-black data-selected:bg-primary data-selected:font-semibold focus:outline-hidden\">\n          About\n        </Tab>\n        <Tab className=\"px-4 py-1 border-2 border-transparent data-selected:border-black data-selected:bg-primary data-selected:font-semibold focus:outline-hidden\">\n          Contact\n        </Tab>\n      </TabList>\n      <TabPanels className=\"border-2 border-black mt-2 p-4\">\n        <TabPanel>\n          Welcome to RetroUI, a retro styled UI library built with React,\n          Tailwind CSS & Headless UI.\n        </TabPanel>\n        <TabPanel>This is the about section!</TabPanel>\n        <TabPanel>And, this is the contact section!</TabPanel>\n      </TabPanels>\n    </TabGroup>\n  );\n}\n",
+      "type": "registry:block",
+      "target": "components/retroui/preview/tab-style-default.tsx"
+    }
+  ]
+}

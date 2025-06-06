@@ -1,0 +1,32 @@
+---
+title: cn
+description: A utilily function that saves you from style conflicts.
+lastUpdated: 17 Oct, 2024
+---
+
+The `cn` utility function combines `clsx` and `tw-merge`.
+This enables you to construct className strings conditionally without having to worry about Tailwind CSS style conflicts.
+
+<br />
+<br />
+
+## Installation
+
+#### 1. Install the dependencies:
+
+```sh
+npm install clsx tailwind-merge
+```
+
+<br />
+
+#### 2. Copy the code 👇 into your `lib/utils.ts` file:
+
+```ts
+import clsx from "clsx";
+import { ClassNameValue, twMerge } from "tailwind-merge";
+
+export function cn(...classes: ClassNameValue[]) {
+  return twMerge(clsx(classes));
+}
+```
