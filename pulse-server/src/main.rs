@@ -5,12 +5,12 @@ use axum::{
 };
 use dotenv::dotenv;
 
-use ngrok::config::ForwarderBuilder;
+// use ngrok::config::ForwarderBuilder;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use url::Url;
+// use url::Url;
 use tower_http::cors::{CorsLayer, Any};
 mod feldera;
 mod stats;
@@ -18,13 +18,15 @@ use tokio::sync::broadcast::Sender;
 use crate::stats::PulseError;
 
 const HUB_URL: &str = "https://pubsubhubbub.appspot.com/subscribe";
-const STATIC_DOMAIN: &str = "terminally-uncommon-quail.ngrok-free.app";
+const STATIC_DOMAIN: &str = "deep-needlessly-sawfly.ngrok-free.app";
 
 #[derive(Clone)]
 struct AppState {
     http_client: Client,
     graph_node_subscription: Sender<Result<String, PulseError>>,
     graph_relationships_subscription: Sender<Result<String, PulseError>>,
+    source_stats_subscription: Sender<Result<String, PulseError>>,
+
 }
 
 #[tokio::main]
@@ -40,24 +42,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let graph_node_subscription = feldera::subscribe_change_stream(client.clone(), "graph_nodes", 4096);
     let graph_relationships_subscription = feldera::subscribe_change_stream(client.clone(), "graph_relationships", 4096);
+    let source_stats_subscription = feldera::subscribe_change_stream(client.clone(), "source_summary", 4096);
 
     let state = AppState {
         http_client: client,
         graph_node_subscription,
-        graph_relationships_subscription
+        graph_relationships_subscription,
+        source_stats_subscription
     };
 
     // Create Axum app
     let app = Router::new()
-        .route("/callback", get(callback_get).post(callback_post))
-        .route("/setup", post(setup_handler))
+        .route("/api/callback", get(callback_get).post(callback_post))
+        .route("/api/setup", post(setup_handler))
         .route("/api/nodes", get(stats::node_updates))
         .route("/api/relationships", get(stats::relationship_updates))
         .route("/api/graph", get(stats::node_rel_updates))
+        .route("/api/sourcestats", get(stats::source_stats))
         .layer(cors)
         .with_state(state);
 
-    let ngrok_auth_token = std::env::var("NGROK_AUTHTOKEN").expect("NGROK_AUTHTOKEN must be set.");
+    // let ngrok_auth_token = std::env::var("NGROK_AUTHTOKEN").expect("NGROK_AUTHTOKEN must be set.");
 
     // Spawn Axum server
     let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
@@ -68,17 +73,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     });
 
     // Set up ngrok tunnel
-    let sess1 = ngrok::Session::builder()
-        .authtoken(ngrok_auth_token)
-        .connect()
-        .await?;
+    // let sess1 = ngrok::Session::builder()
+    //     .authtoken(ngrok_auth_token)
+    //     .connect()
+    //     .await?;
 
-    let _listener = sess1
-        .http_endpoint()
-        .domain(STATIC_DOMAIN)
-        .pooling_enabled(true)
-        .listen_and_forward(Url::parse("http://localhost:3000").unwrap())
-        .await?;
+    // let _listener = sess1
+    //     .http_endpoint()
+    //     .domain(STATIC_DOMAIN)
+    //     .pooling_enabled(true)
+    //     .listen_and_forward(Url::parse("http://localhost:3000").unwrap())
+    //     .await?;
 
     // Wait indefinitely
     tokio::signal::ctrl_c().await?;

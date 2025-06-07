@@ -1,0 +1,17 @@
+services:
+  traefik:
+    image: "traefik:v3.4"
+    container_name: "traefik"
+    network_mode: "host"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+      - "--providers.file.filename=/etc/traefik/dynamic.yml"
+      - "--providers.file.watch=true"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./dynamic.yml:/etc/traefik/dynamic.yml:ro"

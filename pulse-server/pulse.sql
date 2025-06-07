@@ -1,6 +1,10 @@
+CREATE TABLE source_lookup (
+    source_shortcode CHAR(3) NOT NULL,
+    source_name TEXT NOT NULL
+) with ('materialized' = 'true');
+
 CREATE TABLE source_data (
-    data_ulid CHAR(26) NOT NULL PRIMARY KEY,
-    source_name CHAR(3) NOT NULL,
+    source_shortcode CHAR(3) NOT NULL,
     item_title TEXT NOT NULL,
     item_description TEXT NOT NULL
 ) with ('materialized' = 'true');
@@ -12,22 +16,35 @@ CREATE TABLE nodes (
 ) with ('materialized' = 'true');
 
 CREATE TABLE relationships (
-    source_id VARCHAR(255) NOT NULL,
-    target_id VARCHAR(255) NOT NULL,
+    source_node_id VARCHAR(255) NOT NULL,
+    target_node_id VARCHAR(255) NOT NULL,
     rel_type VARCHAR(100) NOT NULL,
     data_ulid CHAR(26) NOT NULL
 ) with ('materialized' = 'true');
 
-
-create materialized view graph_nodes (
+-- Views
+CREATE MATERIALIZED VIEW graph_nodes AS
+SELECT DISTINCT
     id,
     node_type
-) as
-    select id, node_type from nodes group by id, node_type;
+FROM  nodes;
 
-create materialized view graph_relationships (
-    source_id,
-    target_id
-) as
-    select source_id, target_id from relationships group by source_id, target_id;
+CREATE MATERIALIZED VIEW graph_relationships AS
+SELECT DISTINCT 
+    source_node_id AS source, 
+    target_node_id AS target
+FROM relationships;
 
+CREATE MATERIALIZED VIEW source_summary AS
+SELECT
+    s.source_shortcode,
+    s.source_name,
+    COUNT(d.item_title) AS item_count
+FROM
+    source_lookup s
+LEFT JOIN
+    source_data d
+    ON s.source_shortcode = d.source_shortcode
+GROUP BY
+    s.source_shortcode,
+    s.source_name;

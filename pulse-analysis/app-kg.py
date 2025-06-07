@@ -35,37 +35,37 @@ articles_data = [
     {
         "title": "Trump Allies Try to Discredit Experts Warning About the Cost of Tax Cuts",
         "description": "President Trump and his allies have united around a new foe: the economists and budget experts who have warned about the costs of Republicans' tax ambitions.",
-        "source": "nyt",
+        "source_shortcode": "nyt",
     },
     {
         "title": "Trump's Policy Bill Would Add $2.4 Trillion to Debt, Budget Office Says",
         "description": "The estimate from the nonpartisan Congressional Budget Office is all but certain to inflame an already intense debate inside the G.O.P. about the fiscal consequences of their bill to enact President Trump's agenda.",
-        "source": "nyt",
+        "source_shortcode": "nyt",
     },
     {
         "title": "Brown Disciplined a Student Who Asked Questions in the Style of Elon Musk and DOGE",
         "description": "A conservative student newspaper had DOGE-style questions about the work of Brown University staff. Its writers were summoned to disciplinary hearings.",
-        "source": "nyt",
+        "source_shortcode": "nyt",
     },
     {
         "title": "Before the Attack in Boulder, the Gaza War Consumed the City Council",
         "description": "Activists have regularly disrupted council meetings to demand that the city call for a cease-fire in Gaza. The unusual tension suggests a changing Boulder.",
-        "source": "nyt",
+        "source_shortcode": "nyt",
     },
     {
         "title": "Trump Asks Congress to Claw Back $9 Billion for Foreign Aid, NPR and PBS",
         "description": "The request seeks to codify spending cuts advanced by Elon Musk's Department of Government Efficiency.",
-        "source": "nyt",
+        "source_shortcode": "cnn",
     },
     {
         "title": "Some House Republicans Have Regrets After Passing Trump's Domestic Policy Bill",
         "description": "The sprawling legislation carrying President Trump's domestic agenda squeaked through the House with one vote to spare, but some Republicans now say they didn't realize what they voted for.",
-        "source": "nyt",
+        "source_shortcode": "cnn",
     },
     {
         "title": "Justice Dept. Drops Biden-Era Push to Obtain Peter Navarro's Emails",
         "description": "The department's move is one of many recent actions taken to dismiss criminal and civil actions against Trump allies such as Mr. Navarro, the president's trade adviser.",
-        "source": "nyt",
+        "source_shortcode": "cnn",
     },
 ]
 
@@ -76,7 +76,7 @@ documents = [
         metadata={
             "title": item["title"],
             "description": item["description"],
-            "source": item["source"],
+            "source_shortcode": item["source_shortcode"],
         },
     )
     for item in articles_data
@@ -92,6 +92,23 @@ headers = {"Content-Type": "application/json"}
 
 # Wrap the async code in a function
 async def main():
+    source_payload = to_json_lines(
+        [
+            {
+                "source_shortcode": article["source_shortcode"],
+                "item_title": article["title"],
+                "item_description": article["description"],
+            }
+            for article in articles_data
+        ]
+    )
+
+    resp_source = requests.post(
+        f"{FELDERA_URL}/source_data?format=json", data=source_payload, headers=headers
+    )
+
+    print(f"Inserted {len(articles_data)} articles — status {resp_source.status_code}")
+
     graph_documents = await llm_transformer.aconvert_to_graph_documents(documents)
     for doc in graph_documents:
         doc_ulid = str(ulid.new())
@@ -113,8 +130,8 @@ async def main():
         rel_payload = to_json_lines(
             [
                 {
-                    "source_id": rel.source.id,
-                    "target_id": rel.target.id,
+                    "source_node_id": rel.source.id,
+                    "target_node_id": rel.target.id,
                     "rel_type": rel.type,
                     "data_ulid": doc_ulid,
                 }

@@ -27,7 +27,7 @@ import Footer from "@/components/footer";
 
 
 const KnowledgeGraph = dynamic(() => import('@/components/KnowledgeGraph'), {
-  ssr: false // ⛔ disables SSR for this component
+  ssr: false // disables SSR for this component
 });
 
 export default async function Home() {
@@ -50,7 +50,7 @@ export default async function Home() {
           <div className="hidden lg:block lg:w-1/3">
             <Image
               alt="orange cool cat"
-              src="/images/tv_radio.png"
+              src="/images/pexels-fotios.jpg"
               layout="responsive"
               width={500}
               height={500}

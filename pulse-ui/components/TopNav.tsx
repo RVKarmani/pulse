@@ -47,13 +47,13 @@ export default function TopNav() {
                 className="text-black font-head text-2xl flex items-end"
               >
                 <Image
-                  src="/images/logo.png"
-                  alt="retro ui logo"
+                  src="/images/heart-rate-monitor.png"
+                  alt="pulse logo"
                   className="mr-2"
                   height={30}
                   width={30}
                 />
-                <div className="text-foreground">RetroUI</div>
+                <div className="text-foreground">Pulse</div>
               </a>
             </div>
 
@@ -72,7 +72,7 @@ export default function TopNav() {
 
             <div className="flex items-center space-x-4 lg:hidden">
               <Link
-                href="https://github.com/Logging-Stuff/retroui"
+                href="https://github.com/RVKarmani/pulse"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -83,7 +83,7 @@ export default function TopNav() {
 
             <div className="hidden lg:flex items-center space-x-3">
               <Link
-                href="https://github.com/Logging-Stuff/retroui"
+                href="https://github.com/RVKarmani/pulse"
                 target="_blank"
                 rel="noopener noreferrer"
               >

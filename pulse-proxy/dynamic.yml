@@ -1,0 +1,24 @@
+http:
+  routers:
+    pulse_server:
+      rule: "PathPrefix(`/api`)"
+      entryPoints:
+        - web
+      service: pulse_server_service
+
+    pulse_ui:
+      rule: "PathPrefix(`/`)"
+      entryPoints:
+        - web
+      service: pulse_ui_service
+
+  services:
+    pulse_ui_service:
+      loadBalancer:
+        servers:
+          - url: http://localhost:3000
+
+    pulse_server_service:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:4000

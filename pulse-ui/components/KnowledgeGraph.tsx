@@ -56,7 +56,7 @@ const KnowledgeGraph = () => {
             }
         };
 
-        streamJSONL<any>("http://localhost:4000/api/graph", (item) => {
+        streamJSONL<any>("http://localhost/api/graph", (item) => {
             setData((prev) => {
                 console.log("current: ", item);
                 if ("id" in item && "node_type" in item) {
@@ -65,11 +65,11 @@ const KnowledgeGraph = () => {
                         nodes: [...prev.nodes, { id: item.id, group: item.node_type }],
                         links: prev.links,
                     };
-                } else if ("source_id" in item && "target_id" in item) {
+                } else if ("source" in item && "target" in item) {
                     // It's a relationship/link
                     return {
                         nodes: prev.nodes,
-                        links: [...prev.links, { source: item.source_id, target: item.target_id }],
+                        links: [...prev.links, { source: item.source, target: item.target }],
                     };
                 } else {
                     console.warn("Unknown item type received:", item);
