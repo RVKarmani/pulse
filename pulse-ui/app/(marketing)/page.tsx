@@ -17,11 +17,8 @@ export default async function Home() {
         <section className="container max-w-6xl mx-auto px-4 lg:px-0 text-gray-900 flex justify-center items-center lg:gap-28 xl:gap-32 my-28">
           <div className="text-center lg:text-left w-full lg:w-2/3">
             <Text as="h1" className="text-5xl text-foreground lg:text-6xl">
-              Derive actionable insights from news
-              <br />
-              <span className="text-outlined"> in real-time!</span>
+              Trace the <span className="text-outlined">Pulse</span> of the world
             </Text>
-
             <p className="text-lg text-muted-foreground mb-8 mt-4">
               A real-time news analysis platform delivering lightning-fast updates, powered by an incremental query engine
             </p>
@@ -54,7 +51,7 @@ export default async function Home() {
       <section className="container max-w-6xl mx-auto px-4 lg:px-0 flex justify-center items-center lg:gap-28 xl:gap-32 my-28">
         <Image
           alt="architecture"
-          src="/images/pulse.svg"
+          src="/images/pulse/pulse.svg"
           layout="responsive"
           width={1000}
           height={1000}
