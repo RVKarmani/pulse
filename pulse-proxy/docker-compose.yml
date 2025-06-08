@@ -15,3 +15,16 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./dynamic.yml:/etc/traefik/dynamic.yml:ro"
+  
+  ngrok:
+    container_name: "ngrok"
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    network_mode: "host"
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml

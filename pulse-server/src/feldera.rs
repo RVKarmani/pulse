@@ -3,7 +3,7 @@
 use std::io;
 use std::time::Duration;
 
-use crate::stats::PulseError;
+use crate::pulse::PulseError;
 use once_cell::sync::Lazy;
 use futures::{StreamExt, TryStreamExt};
 use log::{error, warn};

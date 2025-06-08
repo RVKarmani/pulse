@@ -18,7 +18,11 @@ const KnowledgeGraph = () => {
             url: string,
             onData: (parsed: T) => void
         ) => {
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                headers: {
+                    "ngrok-skip-browser-warning": "true"
+                }
+            });
             const reader = res.body?.getReader();
             const decoder = new TextDecoder();
             let buffer = "";
@@ -56,7 +60,8 @@ const KnowledgeGraph = () => {
             }
         };
 
-        streamJSONL<any>("http://localhost/api/graph", (item) => {
+        streamJSONL<any>("https://deep-needlessly-sawfly.ngrok-free.app/api/graph", (item) => {
+            console.log(item);
             setData((prev) => {
                 console.log("current: ", item);
                 if ("id" in item && "node_type" in item) {

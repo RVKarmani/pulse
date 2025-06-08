@@ -9,8 +9,8 @@ use serde::de::StdError;
 use tokio::sync::broadcast::error::SendError;
 use tokio_util::codec::LinesCodecError;
 
-use crate::feldera::adhoc_query;
 use crate::AppState;
+use crate::feldera::adhoc_query;
 
 #[derive(Clone, Debug)]
 pub(crate) struct PulseError {
@@ -110,8 +110,6 @@ pub(crate) async fn node_updates(State(state): State<AppState>) -> impl IntoResp
         .unwrap()
 }
 
-
-
 pub(crate) async fn relationship_updates(State(state): State<AppState>) -> impl IntoResponse {
     let initial_data = adhoc_query(state.http_client, "SELECT * FROM graph_relationships").await;
 
@@ -147,9 +145,9 @@ pub(crate) async fn relationship_updates(State(state): State<AppState>) -> impl 
         .unwrap()
 }
 
-
 pub(crate) async fn node_rel_updates(State(state): State<AppState>) -> impl IntoResponse {
-    let initial_node_data = adhoc_query(state.http_client.clone(), "SELECT * FROM graph_nodes").await;
+    let initial_node_data =
+        adhoc_query(state.http_client.clone(), "SELECT * FROM graph_nodes").await;
 
     if let Err(e) = initial_node_data {
         return Response::builder()
@@ -161,7 +159,11 @@ pub(crate) async fn node_rel_updates(State(state): State<AppState>) -> impl Into
             .unwrap();
     }
 
-    let initial_rel_data = adhoc_query(state.http_client.clone(), "SELECT * FROM graph_relationships").await;
+    let initial_rel_data = adhoc_query(
+        state.http_client.clone(),
+        "SELECT * FROM graph_relationships",
+    )
+    .await;
 
     if let Err(e) = initial_rel_data {
         return Response::builder()
@@ -175,34 +177,36 @@ pub(crate) async fn node_rel_updates(State(state): State<AppState>) -> impl Into
 
     let initial_node_stream = futures::stream::once(async move { initial_node_data });
     let initial_rel_stream = futures::stream::once(async move { initial_rel_data });
-    
-    let initial_stream = initial_node_stream.chain(initial_rel_stream);
 
+    let initial_stream = initial_node_stream.chain(initial_rel_stream);
 
     // Change streams
     let node_change_stream_rx = state.graph_node_subscription.subscribe();
-    let node_change_stream = tokio_stream::wrappers::BroadcastStream::new(node_change_stream_rx).filter_map(|result| async move {
-        match result {
-            Ok(value) => Some(value),
-            Err(e) => {
-                debug!("BroadcastStream error: {:?}", e);
-                None // Discard errors
+    let node_change_stream = tokio_stream::wrappers::BroadcastStream::new(node_change_stream_rx)
+        .filter_map(|result| async move {
+            match result {
+                Ok(value) => Some(value),
+                Err(e) => {
+                    debug!("BroadcastStream error: {:?}", e);
+                    None // Discard errors
+                }
             }
-        }
-    });
+        });
 
     let rel_change_stream_rx = state.graph_relationships_subscription.subscribe();
-    let rel_change_stream = tokio_stream::wrappers::BroadcastStream::new(rel_change_stream_rx).filter_map(|result| async move {
-        match result {
-            Ok(value) => Some(value),
-            Err(e) => {
-                debug!("BroadcastStream error: {:?}", e);
-                None // Discard errors
+    let rel_change_stream = tokio_stream::wrappers::BroadcastStream::new(rel_change_stream_rx)
+        .filter_map(|result| async move {
+            match result {
+                Ok(value) => Some(value),
+                Err(e) => {
+                    debug!("BroadcastStream error: {:?}", e);
+                    None // Discard errors
+                }
             }
-        }
-    });
+        });
 
-    let combined_filtered_stream = tokio_stream::StreamExt::merge(node_change_stream, rel_change_stream);
+    let combined_filtered_stream =
+        tokio_stream::StreamExt::merge(node_change_stream, rel_change_stream);
 
     let final_stream = initial_stream.chain(combined_filtered_stream);
 
@@ -248,4 +252,3 @@ pub(crate) async fn source_stats(State(state): State<AppState>) -> impl IntoResp
         .body(Body::from_stream(stream))
         .unwrap()
 }
-
