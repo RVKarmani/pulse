@@ -15,11 +15,12 @@ export default function SourceStats() {
   useEffect(() => {
     const controller = new AbortController();
     const fetchStream = async () => {
-      const response = await fetch("https://deep-needlessly-sawfly.ngrok-free.app/api/sourcestats", {
+      const response = await fetch(`${process.env.PULSE_API_HOST}/api/sourcestats`, {
         method: "GET",
         signal: controller.signal,
+        // Avoid ngrok warning
         headers: {
-          "ngrok-skip-browser-warning": "true"
+          "ngrok-skip-browser-warning": "true" 
         }
       });
 

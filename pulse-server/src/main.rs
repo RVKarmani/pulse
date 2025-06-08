@@ -1,20 +1,14 @@
 #![deny(warnings)]
-use axum::{
-    extract::{Path, Query}, http::{HeaderMap, StatusCode}, response::IntoResponse, routing::get, routing::post, Router
-};
-
+use axum::{Router, routing::get, routing::post};
 
 use dotenv::dotenv;
 
-// use ngrok::config::ForwarderBuilder;
 use reqwest::Client;
-use std::collections::HashMap;
 use std::net::SocketAddr;
-// use url::Url;
 use tower_http::cors::{Any, CorsLayer};
+mod feed;
 mod feldera;
 mod pulse;
-mod feed;
 
 use crate::pulse::PulseError;
 use tokio::sync::broadcast::Sender;
@@ -60,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let app = Router::new()
         .route(
             "/api/{source_shortcode}/callback",
-            post(feed::callback_post).get(callback_get),
+            post(feed::callback_post).get(feed::callback_get),
         )
         .route("/api/nodes", get(pulse::node_updates))
         .route("/api/relationships", get(pulse::relationship_updates))
@@ -95,29 +89,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Wait indefinitely
     tokio::signal::ctrl_c().await?;
     Ok(())
-}
-
-async fn callback_get(
-    Path(source_shortcode): Path<String>,
-    headers: HeaderMap,
-    Query(params): Query<HashMap<String, String>>,
-) -> impl IntoResponse {
-    println!("Callback received for source: {}", source_shortcode);
-    // Print headers
-    for (key, value) in headers.iter() {
-        println!("Header: {}: {:?}", key, value);
-    }
-    // Print query parameters
-    for (key, value) in params.iter() {
-        println!("Query param: {} = {}", key, value);
-    }
-
-    if let Some(challenge) = params.get("hub.challenge") {
-        (StatusCode::OK, challenge.clone())
-    } else {
-        (
-            StatusCode::BAD_REQUEST,
-            "Missing hub.challenge parameter".to_string(),
-        )
-    }
 }

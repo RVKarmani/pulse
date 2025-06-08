@@ -1,8 +1,33 @@
-use axum::{body::Bytes};
+use axum::{body::Bytes, extract::{Path, Query}, response::IntoResponse};
 
 use feed_rs::parser;
-use hyper::StatusCode;
-use std::io::Cursor;
+use hyper::{HeaderMap, StatusCode};
+use std::{collections::HashMap, io::Cursor};
+
+pub(crate) async fn callback_get(
+    Path(source_shortcode): Path<String>,
+    headers: HeaderMap,
+    Query(params): Query<HashMap<String, String>>,
+) -> impl IntoResponse {
+    println!("Callback received for source: {}", source_shortcode);
+    // Print headers
+    for (key, value) in headers.iter() {
+        println!("Header: {}: {:?}", key, value);
+    }
+    // Print query parameters
+    for (key, value) in params.iter() {
+        println!("Query param: {} = {}", key, value);
+    }
+
+    if let Some(challenge) = params.get("hub.challenge") {
+        (StatusCode::OK, challenge.clone())
+    } else {
+        (
+            StatusCode::BAD_REQUEST,
+            "Missing hub.challenge parameter".to_string(),
+        )
+    }
+}
 
 
 #[axum::debug_handler]

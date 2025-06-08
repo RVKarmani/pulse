@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
 
@@ -60,7 +60,7 @@ const KnowledgeGraph = () => {
             }
         };
 
-        streamJSONL<any>("https://deep-needlessly-sawfly.ngrok-free.app/api/graph", (item) => {
+        streamJSONL<any>(`${process.env.PULSE_API_HOST}/api/graph`, (item) => {
             console.log(item);
             setData((prev) => {
                 console.log("current: ", item);
