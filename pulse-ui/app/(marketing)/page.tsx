@@ -23,7 +23,7 @@ export default async function Home() {
             </Text>
 
             <p className="text-lg text-muted-foreground mb-8 mt-4">
-              RSS-based system built for processing news in real-time with incremental-query computation engine for blazing-fast updates
+              A real-time news analysis platform delivering lightning-fast updates, powered by an incremental query engine
             </p>
 
           </div>
