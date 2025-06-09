@@ -15,7 +15,7 @@ export default function SourceStats() {
   useEffect(() => {
     const controller = new AbortController();
     const fetchStream = async () => {
-      const response = await fetch(`${process.env.PULSE_API_HOST}/api/sourcestats`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_PULSE_API_HOST}/api/sourcestats`, {
         method: "GET",
         signal: controller.signal,
         // Avoid ngrok warning

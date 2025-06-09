@@ -60,7 +60,7 @@ const KnowledgeGraph = () => {
             }
         };
 
-        streamJSONL<any>(`${process.env.PULSE_API_HOST}/api/graph`, (item) => {
+        streamJSONL<any>(`${process.env.NEXT_PUBLIC_PULSE_API_HOST}/api/graph`, (item) => {
             console.log(item);
             setData((prev) => {
                 console.log("current: ", item);
