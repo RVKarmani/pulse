@@ -12,14 +12,13 @@ use serde_json::Value;
 use tokio::sync::broadcast::Sender;
 use dotenv::dotenv;
 
-
 // Load .env only once globally at runtime
-static PIPELINE_NAME: Lazy<String> = Lazy::new(|| {
+pub static PIPELINE_NAME: Lazy<String> = Lazy::new(|| {
     dotenv().ok(); // Loads .env into std::env
     std::env::var("FELDERA_PIPELINE_NAME").expect("FELDERA_PIPELINE_NAME must be set.")
 });
 
-static FELDERA_HOST: Lazy<String> = Lazy::new(|| {
+pub static FELDERA_HOST: Lazy<String> = Lazy::new(|| {
     dotenv().ok();
     std::env::var("FELDERA_HOST").expect("FELDERA_HOST must be set.")
 });
