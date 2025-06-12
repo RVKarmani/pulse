@@ -3,9 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GithubIcon, MoonIcon, SunIcon } from "lucide-react";
-import HamburgerMenu from "./HamburgerMenu";
 import { Button, Text } from "@/components/retroui";
-import { navConfig } from "@/config/navigation";
 
 export default function TopNav() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -57,19 +55,7 @@ export default function TopNav() {
               </a>
             </div>
 
-            {/* Navigation Links */}
-            <div className="hidden md:flex space-x-6">
-              {navConfig.topNavItems.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="hover:underline decoration-primary underline-offset-2 transition-all"
-                >
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-
+            
             <div className="flex items-center space-x-4 lg:hidden">
               <Link
                 href="https://github.com/RVKarmani/pulse"
@@ -78,7 +64,6 @@ export default function TopNav() {
               >
                 <GithubIcon />
               </Link>
-              <HamburgerMenu />
             </div>
 
             <div className="hidden lg:flex items-center space-x-3">

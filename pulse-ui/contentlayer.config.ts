@@ -118,43 +118,6 @@ export default makeSource({
               }),
             );
           }
-
-          if (node.name === "ComponentShowcase" && node.attributes) {
-            const name = getNodeAttributeByName(node, "name")
-              ?.value as keyof typeof componentConfig.examples;
-
-            if (!name) {
-              return null;
-            }
-
-            const component = componentConfig.examples[name];
-            const filePath = path.join(process.cwd(), component.filePath);
-            const source = fs.readFileSync(filePath, "utf8");
-
-            node.children?.push(
-              u("element", {
-                tagName: "pre",
-                properties: {
-                  __src__: component.filePath,
-                  __rawString__: source,
-                },
-                children: [
-                  u("element", {
-                    tagName: "code",
-                    properties: {
-                      className: ["language-tsx"],
-                    },
-                    children: [
-                      {
-                        type: "text",
-                        value: source,
-                      },
-                    ],
-                  }),
-                ],
-              }),
-            );
-          }
         });
       },
       [
