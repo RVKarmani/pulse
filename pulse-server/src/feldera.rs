@@ -42,15 +42,13 @@ pub(crate) async fn adhoc_query(client: Client, sql: &str) -> Result<String, Pul
         )));
     }
 
-    print!("here");
     let body = response.text().await.map_err(PulseError::from)?;
 
     Ok(body)
 }
 
-/// Parses feldera change format inside of json_data
-///
-/// `{"sequence_number": ...,"json_data":[{"delete": {...} },{"insert": {...} }]}`
+// Parses feldera change format inside of json_data
+// `{"sequence_number": ...,"json_data":[{"delete": {...} },{"insert": {...} }]}`
 #[derive(serde::Deserialize)]
 #[allow(dead_code)]
 enum Change {

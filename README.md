@@ -10,9 +10,14 @@ Pulse is a news analysis platform that prioritizes computational efficiency to d
 ## Overview
 ![Pulse Architecture](pulse-ui/public/images/pulse/pulse.svg)
 
-- [pulse-server](pulse-server) - Backend server serving rest-apis and interacting with the query engine
-- [pulse-ui](pulse-ui) - Frontend of the applications
-- [pulse-proxy](pulse-proxy) - Provides public domain, proxy with secure tunnel and path-based routing
+### [pulse-server](pulse-server)
+Backend server serving rest-apis and interacting with the query engine
+
+### [pulse-ui](pulse-ui)
+Frontend of the applications
+[![Next][https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white]][https://nextjs.org/]
+### [pulse-proxy](pulse-proxy)
+Provides public domain, proxy with secure tunnel and path-based routing
 
 ## Output
 ### Feldera Change Stream
