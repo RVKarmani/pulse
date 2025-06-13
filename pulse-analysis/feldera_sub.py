@@ -13,6 +13,8 @@ import requests
 from feldera.enums import PipelineStatus
 import pandas
 
+from langchain_neo4j import Neo4jGraph
+
 # Setup
 
 load_dotenv()
@@ -22,6 +24,12 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_GEMINI_APIKEY")
 FELDERA_HOST = os.getenv("FELDERA_HOST")
 PIPELINE_NAME = os.getenv("FELDERA_PIPELINE_NAME")
 LLM_MODEL = os.getenv("LLM_MODEL")
+
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
+# NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+
+graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USERNAME, refresh_schema=False)
 
 if not all([GOOGLE_API_KEY, FELDERA_HOST, PIPELINE_NAME, LLM_MODEL]):
     raise EnvironmentError("One or more required environment variables are not set.")
@@ -81,7 +89,6 @@ async def process_chunks():
         df = await change_queue.get()
         changes = df.to_dict(orient="records")
         logging.info(f"📥 Received {len(changes)} new changes")
-
         documents = [
             Document(
                 page_content=f"{change['item_title']} {change['item_description']}",
@@ -95,6 +102,7 @@ async def process_chunks():
         ]
 
         graph_docs = await llm_transformer.aconvert_to_graph_documents(documents)
+        graph.add_graph_documents(graph_docs, baseEntityLabel=True, include_source=True)
 
         for doc in graph_docs:
             doc_ulid = str(ulid.new())
