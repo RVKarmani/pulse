@@ -13,9 +13,22 @@ Pulse is a news analysis platform that prioritizes computational efficiency to d
 ### [pulse-server](pulse-server)
 Backend server serving rest-apis and interacting with the query engine
 
+#### Built with
+
+[![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+
+
 ### [pulse-ui](pulse-ui)
 Frontend of the applications
-[![Next][https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white]][https://nextjs.org/]
+
+#### Built with
+
+[![NextJS](https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/) [![Bun](https://img.shields.io/badge/bun-000?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh/)
+
+[![RetroUI](https://img.shields.io/badge/retroui-ebd428.svg?style=for-the-badge)](https://www.retroui.dev/) [![Shadcn](https://img.shields.io/badge/shadcn/ui-000?style=for-the-badge&logo=shadcnui&logoColor=white)](https://ui.shadcn.com/) [![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/) 
+
+
+
 ### [pulse-proxy](pulse-proxy)
 Provides public domain, proxy with secure tunnel and path-based routing
 
