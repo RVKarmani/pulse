@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 from pymilvus import MilvusClient
 import os
 from fastapi.middleware.cors import CORSMiddleware
-from langchain import hub
-from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain import hub
+# from langchain_google_genai import ChatGoogleGenerativeAI
 
 from openai import OpenAI
 
@@ -152,7 +152,8 @@ def llm_call(system_prompt, user_prompt, stream):
         "min_p": min_p
         }
     )
-
+    
+    return chat_completion_res
 
 
 
@@ -199,7 +200,7 @@ async def generate_embedding(request: EmbeddingRequest):
         user_prompt = f"""
             Articles:
             {relevant_articles}
-            Question: {user_question}
+            Question: {query}
 
             Summary:
             """
