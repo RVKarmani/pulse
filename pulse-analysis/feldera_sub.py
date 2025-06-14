@@ -43,7 +43,7 @@ encoder = SentenceTransformer("all-distilroberta-v1")
 
 check_collection = milvus_client.has_collection(ZILLIZ_COLLECTION)
 if check_collection:
-    logging.info(f"{ZILLIZ_COLLECTION} exists....")
+    logging.info(f"ℹ️ {ZILLIZ_COLLECTION} exists....")
     collection_property = milvus_client.describe_collection(ZILLIZ_COLLECTION)
     logging.info("ℹ️ Collection details: %s" % collection_property)
 else:
@@ -53,7 +53,7 @@ else:
 graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USERNAME, refresh_schema=False)
 
 if not all([GOOGLE_API_KEY, FELDERA_HOST, PIPELINE_NAME, LLM_MODEL]):
-    logging.error("‼️One or more required environment variables are not set.")
+    logging.error("‼️ One or more required environment variables are not set.")
 
 # LLM
 llm = ChatGoogleGenerativeAI(
@@ -70,7 +70,7 @@ feldera_url = f"{FELDERA_HOST}/v0/pipelines/{PIPELINE_NAME}/ingress"
 
 change_queue: pandas.DataFrame = (
     asyncio.Queue()
-)  # LLM takes time for generating graph, use this for queueing articles and returning from foreach_chunk
+)  # LLM takes time for generating graph, use this for queueing articles and returning from foreach_chunk immediately
 
 
 def make_callback(loop):
@@ -128,13 +128,14 @@ async def process_chunks():
             content_arr.append(page_content)
             documents.append(change_doc)
 
+        num_content = len(content_arr)
         # Generate embeddings
         embeddings = encoder.encode(content_arr)
 
         # Insert into vector database
-        if len(embeddings) != len(content_arr):
+        if len(embeddings) != num_content:
             logging.error(
-                f"‼️Embedding length {len(embeddings)} don't match content length {len(content_arr)}"
+                f"‼️ Embedding length {len(embeddings)} don't match content length {num_content}"
             )
         else:
             zilliz_insert_arr = []
@@ -145,6 +146,7 @@ async def process_chunks():
                 }
                 zilliz_insert_arr.append(zilliz_item)
             milvus_client.insert(ZILLIZ_COLLECTION, zilliz_insert_arr)
+            logging.info(f"🍽️ Ingested {num_content} articles into vectordb")
 
         graph_docs = await llm_transformer.aconvert_to_graph_documents(documents)
         graph.add_graph_documents(graph_docs, baseEntityLabel=True, include_source=True)
@@ -177,6 +179,8 @@ async def process_chunks():
 async def main():
     # Main thread
     loop = asyncio.get_running_loop()
+
+    logging.info("🏁 Starting Feldera Consumer")
 
     feldera_pipeline.foreach_chunk("source_data", make_callback(loop))
 

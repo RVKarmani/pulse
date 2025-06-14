@@ -15,11 +15,9 @@ load_dotenv()
 ZILLIZ_URI = os.getenv("ZILLIZ_URI")
 ZILLIZ_TOKEN = os.getenv("ZILLIZ_TOKEN")
 ZILLIZ_COLLECTION = os.getenv("ZILLIZ_COLLECTION")
-
 GOOGLE_GEMINI_APIKEY = os.getenv("GOOGLE_GEMINI_APIKEY")
 
 prompt = hub.pull("rlm/rag-prompt")
-
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash-preview-05-20",  # or "gemini-pro"
@@ -35,7 +33,7 @@ search_params = {"metric_type": "COSINE", "params": {}}
 origins = [
     "http://localhost",
     "http://localhost:3000",
-    "https://deep-needlessly-sawfly.ngrok-free.app", 
+    "https://deep-needlessly-sawfly.ngrok-free.app",
 ]
 
 app = FastAPI(
@@ -116,7 +114,9 @@ async def generate_embedding(request: EmbeddingRequest):
                 }
             )
 
-        filled_prompt = prompt.invoke({"question": query, "context": "\n".join(context)})
+        filled_prompt = prompt.invoke(
+            {"question": query, "context": "\n".join(context)}
+        )
         answer = llm.invoke(filled_prompt)
 
         return {"results": results, "rag_response": answer.content}
@@ -127,4 +127,5 @@ async def generate_embedding(request: EmbeddingRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
