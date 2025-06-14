@@ -1,22 +1,24 @@
-import os
-import json
 import asyncio
+import json
 import logging
-import ulid
+import os
 from typing import List
+
+import pandas
+import requests
 from dotenv import load_dotenv
+from feldera import FelderaClient, Pipeline
+from feldera.enums import PipelineStatus
+from langchain_core.documents import Document
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.documents import Document
-from feldera import FelderaClient, Pipeline
-import requests
-from feldera.enums import PipelineStatus
-import pandas
-
 from langchain_neo4j import Neo4jGraph
+from pymilvus import MilvusClient
+from sentence_transformers import SentenceTransformer
+import ulid
+
 
 # Setup
-
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
@@ -27,12 +29,31 @@ LLM_MODEL = os.getenv("LLM_MODEL")
 
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
+
+ZILLIZ_URI = os.getenv("ZILLIZ_URI")
+ZILLIZ_TOKEN = os.getenv("ZILLIZ_TOKEN")
+ZILLIZ_COLLECTION = os.getenv("ZILLIZ_COLLECTION")
+
 # NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+
+# Vector store
+milvus_client = MilvusClient(uri=ZILLIZ_URI, token=ZILLIZ_TOKEN)
+print(f"Connected to DB: {ZILLIZ_URI} successfully")
+encoder = SentenceTransformer("all-distilroberta-v1")
+
+check_collection = milvus_client.has_collection(ZILLIZ_COLLECTION)
+if check_collection:
+    logging.info(f"{ZILLIZ_COLLECTION} exists....")
+    collection_property = milvus_client.describe_collection(ZILLIZ_COLLECTION)
+    logging.info("ℹ️ Collection details: %s" % collection_property)
+else:
+    logging.error(f"‼️ {ZILLIZ_COLLECTION} doesn't exist")
+
 
 graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USERNAME, refresh_schema=False)
 
 if not all([GOOGLE_API_KEY, FELDERA_HOST, PIPELINE_NAME, LLM_MODEL]):
-    raise EnvironmentError("One or more required environment variables are not set.")
+    logging.error("‼️One or more required environment variables are not set.")
 
 # LLM
 llm = ChatGoogleGenerativeAI(
@@ -89,17 +110,41 @@ async def process_chunks():
         df = await change_queue.get()
         changes = df.to_dict(orient="records")
         logging.info(f"📥 Received {len(changes)} new changes")
-        documents = [
-            Document(
-                page_content=f"{change['item_title']} {change['item_description']}",
+
+        content_arr = []
+        documents = []
+
+        for change in changes:
+            page_content = f"{change['item_title']}\n{change['item_description']}"
+            change_doc = Document(
+                page_content=page_content,
                 metadata={
                     "title": change["item_title"],
                     "description": change["item_description"],
                     "source_shortcode": change["source_shortcode"],
                 },
             )
-            for change in changes
-        ]
+
+            content_arr.append(page_content)
+            documents.append(change_doc)
+
+        # Generate embeddings
+        embeddings = encoder.encode(content_arr)
+
+        # Insert into vector database
+        if len(embeddings) != len(content_arr):
+            logging.error(
+                f"‼️Embedding length {len(embeddings)} don't match content length {len(content_arr)}"
+            )
+        else:
+            zilliz_insert_arr = []
+            for i in range(len(content_arr)):
+                zilliz_item = {
+                    "content": content_arr[i],
+                    "vector": embeddings[i],
+                }
+                zilliz_insert_arr.append(zilliz_item)
+            milvus_client.insert(ZILLIZ_COLLECTION, zilliz_insert_arr)
 
         graph_docs = await llm_transformer.aconvert_to_graph_documents(documents)
         graph.add_graph_documents(graph_docs, baseEntityLabel=True, include_source=True)

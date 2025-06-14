@@ -5,6 +5,12 @@ http:
       entryPoints:
         - web
       service: pulse_server_service
+    
+    pulse_llm:
+      rule: "PathPrefix(`/llm`)"
+      entryPoints:
+        - web
+      service: pulse_llm_service
 
     pulse_ui:
       rule: "PathPrefix(`/`)"
@@ -22,3 +28,8 @@ http:
       loadBalancer:
         servers:
           - url: http://127.0.0.1:4000
+
+    pulse_llm_service:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:8000

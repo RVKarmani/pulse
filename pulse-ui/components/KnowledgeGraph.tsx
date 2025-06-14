@@ -61,9 +61,7 @@ const KnowledgeGraph = () => {
         };
 
         streamJSONL<any>(`${process.env.NEXT_PUBLIC_PULSE_API_HOST}/api/graph`, (item) => {
-            console.log(item);
             setData((prev) => {
-                console.log("current: ", item);
                 if ("id" in item && "node_type" in item) {
                     // It's a node
                     return {

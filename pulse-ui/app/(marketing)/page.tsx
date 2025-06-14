@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Image from "next/image";
 import Footer from "@/components/footer";
 import SourceStats from "@/components/SourceStats";
+import LLMSearch from "@/components/LLMSearch";
 
 const KnowledgeGraph = dynamic(() => import('@/components/KnowledgeGraph'), {
   ssr: false // disables SSR for this component
@@ -57,6 +58,10 @@ export default async function Home() {
           height={1000}
           className="h-full w-full"
         />
+      </section>
+
+      <section className="container max-w-6xl mx-auto px-4 lg:px-0 flex justify-center items-center lg:gap-28 xl:gap-32 my-28">
+        <LLMSearch />
       </section>
 
       <section className="container max-w-6xl mx-auto px-4 lg:px-0 flex justify-center items-center lg:gap-28 xl:gap-32 my-28">
