@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Input } from "@/components/retroui/Input";
 import { Button } from "@/components/retroui/Button";
 import { Card } from "@/components/retroui/Card";
-import { Brain } from "lucide-react";
 import { Accordion } from "@/components/retroui/Accordion";
+import { ToggleGroup, ToggleGroupItem } from "@/components/retroui";
+import { Brain, Bot, MessageCircle } from "lucide-react";
 
 export default function LLMSearch() {
   const [query, setQuery] = useState("");
@@ -13,6 +14,7 @@ export default function LLMSearch() {
   const [thinkingContent, setThinkingContent] = useState("");
   const [responseContent, setResponseContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"thinking" | "response">("thinking");
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -21,6 +23,7 @@ export default function LLMSearch() {
     setResults([]);
     setThinkingContent("");
     setResponseContent("");
+    setActiveTab("thinking");
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_PULSE_API_HOST}/llm/query`, {
@@ -55,15 +58,18 @@ export default function LLMSearch() {
               case "results":
                 setResults(parsed.content);
                 break;
+
               case "thinking":
-                setThinkingContent((prev) => prev + parsed.content.replace(/<\/?think>/g, ""));
+                setThinkingContent((prev) => prev + parsed.content);
                 break;
+
               case "response":
+                setActiveTab("response");
                 setResponseContent((prev) => prev + parsed.content);
                 break;
+
               case "error":
                 console.error("Stream error:", parsed.content);
-                setLoading(false);
                 break;
             }
           } catch (e) {
@@ -80,7 +86,7 @@ export default function LLMSearch() {
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
-      {/* Input */}
+      {/* Input with button */}
       <div className="flex items-center gap-2">
         <Input
           type="text"
@@ -88,33 +94,76 @@ export default function LLMSearch() {
           className="flex-1"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSearch();
+          }}
         />
         <Button size="icon" onClick={handleSearch} disabled={loading}>
           <Brain className="w-5 h-5" />
         </Button>
       </div>
 
+      {/* Toggle between RAG responses */}
+      {(thinkingContent || responseContent) && (
+        <ToggleGroup
+          type="single"
+          variant="outlined"
+          value={activeTab}
+          onValueChange={(value) => {
+            if (value) setActiveTab(value as "thinking" | "response");
+          }}
+          className="mb-2"
+        >
+          <ToggleGroupItem value="thinking">
+            <Bot className="w-4 h-4 mr-1" />
+            Thinking
+          </ToggleGroupItem>
+          <ToggleGroupItem value="response">
+            <MessageCircle className="w-4 h-4 mr-1" />
+            Summary
+          </ToggleGroupItem>
+        </ToggleGroup>
+      )}
+
+      {/* Conditionally show RAG cards */}
+      {activeTab === "thinking" && thinkingContent && (
+        <Card className="max-h-64 overflow-y-auto">
+          <Card.Content className="whitespace-pre-line">{thinkingContent}</Card.Content>
+        </Card>
+      )}
+
+      {activeTab === "response" && responseContent && (
+        <Card>
+          <Card.Content className="whitespace-pre-line">{responseContent}</Card.Content>
+        </Card>
+      )}
+
+      {/* Loading indicator */}
+      {loading && results.length === 0 && (
+        <Card>
+          <Card.Content className="text-muted">Searching...</Card.Content>
+        </Card>
+      )}
+
       {/* Vector Search Results */}
       {results.length > 0 && (
         <Card>
           <Card.Header>
-            <Card.Title className="text-base font-semibold">Search Results</Card.Title>
+            <Card.Title className="text-base font-semibold">Top Search Results</Card.Title>
           </Card.Header>
           <Card.Content>
-            <Accordion type="single" collapsible className="space-y-4 w-full">
+            <Accordion type="single" collapsible className="w-full space-y-2">
               {results.map((result, idx) => {
                 const [title, ...rest] = result.content.split("\n");
                 const description = rest.join("\n").trim();
-
                 return (
                   <Accordion.Item key={idx} value={`item-${idx}`}>
                     <Accordion.Header>
                       {title || `Result #${idx + 1}`}
                     </Accordion.Header>
                     <Accordion.Content>
-                      {description && <div className="whitespace-pre-line mb-2">{description}</div>}
-                      <div className="text-xs text-muted-foreground">
+                      <p className="text-sm whitespace-pre-line">{description}</p>
+                      <div className="mt-2 text-xs text-muted-foreground">
                         Distance: {result.distance.toFixed(4)} | ID: {result.primary_key}
                       </div>
                     </Accordion.Content>
@@ -123,33 +172,6 @@ export default function LLMSearch() {
               })}
             </Accordion>
           </Card.Content>
-        </Card>
-      )}
-
-      {/* Thinking Card */}
-      {thinkingContent && (
-        <Card>
-          <Card.Header>
-            <Card.Title className="text-base font-semibold">Thinking</Card.Title>
-          </Card.Header>
-          <Card.Content className="whitespace-pre-line">{thinkingContent}</Card.Content>
-        </Card>
-      )}
-
-      {/* Final RAG Response */}
-      {responseContent && (
-        <Card>
-          <Card.Header>
-            <Card.Title className="text-base font-semibold">RAG Summary</Card.Title>
-          </Card.Header>
-          <Card.Content className="whitespace-pre-line">{responseContent}</Card.Content>
-        </Card>
-      )}
-
-      {/* Loading Indicator */}
-      {loading && results.length === 0 && (
-        <Card>
-          <Card.Content className="text-muted">Searching...</Card.Content>
         </Card>
       )}
     </div>

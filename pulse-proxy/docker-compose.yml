@@ -28,3 +28,22 @@ services:
       - "/etc/ngrok.yml"
     volumes:
       - ./ngrok.yml:/etc/ngrok.yml
+  
+  feldera:
+    container_name: "feldera"
+    image: ghcr.io/feldera/pipeline-manager:latest
+    restart: unless-stopped
+    ports:
+      - 9090:8080
+  
+  neo4j:
+    container_name: "neo4j-apoc"
+    network_mode: "host"
+    image: neo4j
+    restart: unless-stopped
+    environment:
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled= true
+      - NEO4J_apoc_import_file_use__neo4j__config=true 
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_AUTH=none

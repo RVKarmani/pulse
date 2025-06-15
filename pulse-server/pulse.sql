@@ -48,3 +48,11 @@ LEFT JOIN
 GROUP BY
     s.source_shortcode,
     s.source_name;
+
+--- Insert
+INSERT INTO source_lookup VALUES
+('cnn', 'CNN'),
+('bbc', 'BBC News'),
+('pol', 'Politico'),
+('nyt', 'The New York Times'),
+('cbs', 'CBS News')

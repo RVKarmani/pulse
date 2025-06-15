@@ -1,0 +1,32 @@
+[
+    {
+        "feed_url": "https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml",
+        "callback_url": "https://deep-needlessly-sawfly.ngrok-free.app/api/nyt/callback",
+        "name": "The New York Times",
+        "shortcode": "nyt"
+    },
+    {
+        "feed_url": "https://rss.politico.com/politics-news.xml",
+        "callback_url": "https://deep-needlessly-sawfly.ngrok-free.app/api/pol/callback",
+        "name": "Politico",
+        "shortcode": "pol"
+    },
+    {
+        "feed_url": "https://www.cbsnews.com/latest/rss/politics",
+        "callback_url": "https://deep-needlessly-sawfly.ngrok-free.app/api/cbs/callback",
+        "name": "CBS News",
+        "shortcode": "cbs"
+    },
+    {
+        "feed_url": "https://www.washingtonpost.com/arcio/rss/category/politics",
+        "callback_url": "https://deep-needlessly-sawfly.ngrok-free.app/api/was/callback",
+        "name": "Washington Post",
+        "shortcode": "was"
+    },
+    {
+        "feed_url": "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
+        "callback_url": "https://deep-needlessly-sawfly.ngrok-free.app/api/bbc/callback",
+        "name": "BBC News",
+        "shortcode": "bbc"
+    }
+]

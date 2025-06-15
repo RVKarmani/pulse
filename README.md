@@ -39,6 +39,14 @@ Interface server with LLM for RAG
 
 
 ## Output
+### Insights Generation
+![Thinking](ss/thinking.png)
+
+![Summary](ss/summary.png)
+
+### Vector Database (Zilliz Cloud/Milvus Cluster)
+![Milvus](ss/milvus.png)
+
 ### Feldera Change Stream
 Incremental updates to materialized views graph_nodes and graph_relationships pushed to frontend
 

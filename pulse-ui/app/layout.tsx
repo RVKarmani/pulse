@@ -28,7 +28,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Retro Styled React UI Library | Retro UI",
+  title: "Generate new insights | Pulse",
   description:
     "RetroUI - Retro styled component library built with React and TailwindCSS for modern web apps.",
   openGraph: {

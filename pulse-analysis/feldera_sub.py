@@ -15,9 +15,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_neo4j import Neo4jGraph
 from pymilvus import MilvusClient
 from sentence_transformers import SentenceTransformer
-import ulid
+from ulid import ulid
 
-
+from openai import OpenAI
 # Setup
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +33,13 @@ NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 ZILLIZ_URI = os.getenv("ZILLIZ_URI")
 ZILLIZ_TOKEN = os.getenv("ZILLIZ_TOKEN")
 ZILLIZ_COLLECTION = os.getenv("ZILLIZ_COLLECTION")
+NOVITA_APIKEY = os.getenv("NOVITA_APIKEY")
+
+# LLM Model
+llm_client = OpenAI(
+    base_url="https://api.novita.ai/v3/openai",
+    api_key=NOVITA_APIKEY,
+)
 
 # NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
@@ -71,6 +78,23 @@ feldera_url = f"{FELDERA_HOST}/v0/pipelines/{PIPELINE_NAME}/ingress"
 change_queue: pandas.DataFrame = (
     asyncio.Queue()
 )  # LLM takes time for generating graph, use this for queueing articles and returning from foreach_chunk immediately
+
+vec_embed_model = "baai/bge-m3"
+
+def get_embeddings(texts, model=vec_embed_model, encoding_format="float"):
+    result = llm_client.embeddings.create(
+        model=model,
+        input=texts,
+        encoding_format=encoding_format
+    )
+
+    embeddings = []
+
+    for query_idx in range(len(result.data)):
+        embeddings.append(result.data[query_idx].embedding)
+
+    return embeddings
+
 
 
 def make_callback(loop):
@@ -130,7 +154,7 @@ async def process_chunks():
 
         num_content = len(content_arr)
         # Generate embeddings
-        embeddings = encoder.encode(content_arr)
+        embeddings = get_embeddings(content_arr)
 
         # Insert into vector database
         if len(embeddings) != num_content:
@@ -149,10 +173,10 @@ async def process_chunks():
             logging.info(f"🍽️ Ingested {num_content} articles into vectordb")
 
         graph_docs = await llm_transformer.aconvert_to_graph_documents(documents)
-        graph.add_graph_documents(graph_docs, baseEntityLabel=True, include_source=True)
+        # graph.add_graph_documents(graph_docs, baseEntityLabel=True, include_source=True)
 
         for doc in graph_docs:
-            doc_ulid = str(ulid.new())
+            doc_ulid = str(ulid())
             logging.info(f"🧠 Processing graph document: {doc_ulid}")
 
             # Insert nodes

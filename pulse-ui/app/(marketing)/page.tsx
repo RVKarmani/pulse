@@ -49,7 +49,7 @@ export default async function Home() {
         </section>
       </div>
 
-      <section className="container max-w-6xl mx-auto px-4 lg:px-0 flex justify-center items-center lg:gap-28 xl:gap-32 my-28">
+      {/* <section className="container max-w-6xl mx-auto px-4 lg:px-0 flex justify-center items-center lg:gap-28 xl:gap-32 my-28">
         <Image
           alt="architecture"
           src="/images/pulse/pulse.svg"
@@ -58,7 +58,7 @@ export default async function Home() {
           height={1000}
           className="h-full w-full"
         />
-      </section>
+      </section> */}
 
       <section className="container max-w-6xl mx-auto px-4 lg:px-0 flex justify-center items-center lg:gap-28 xl:gap-32 my-28">
         <LLMSearch />
